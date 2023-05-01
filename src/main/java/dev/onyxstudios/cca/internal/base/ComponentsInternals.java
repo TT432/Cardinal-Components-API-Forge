@@ -24,46 +24,22 @@ package dev.onyxstudios.cca.internal.base;
 
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistry;
 import dev.onyxstudios.cca.internal.base.asm.StaticComponentLoadingException;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Properties;
 
 public final class ComponentsInternals {
     public static final Logger LOGGER = LogManager.getLogger("Cardinal Components API");
+    // TODO Config
     private static boolean logDeserializationWarnings = true;
 
     public static void init() {
-        Path path = FabricLoader.getInstance().getConfigDir().resolve("cardinal-components-api.properties");
-        try(Reader reader = Files.newBufferedReader(path)) {
-            Properties cfg = new Properties();
-            cfg.load(reader);
-            logDeserializationWarnings = Boolean.parseBoolean(cfg.getProperty("log-deserialization-warnings", "true"));
-        } catch (IOException e) {
-            try {
-                Files.writeString(path, """
-                    # If set to false, warnings will not get logged when a component fails to be resolved (typically due to mods being removed)
-                    # Default value: true
-                    log-deserialization-warnings = true
-
-                    # Internal value, do not edit or your changes may be arbitrarily reset
-                    config-version = 1
-                    """);
-            } catch (IOException ex) {
-                LOGGER.error("Failed to write config file at {}", path);
-            }
-        }
     }
 
     @Nonnull
@@ -74,7 +50,7 @@ public final class ComponentsInternals {
                 throw new IllegalArgumentException("Expected 1 constructor declaration in " + factoryClass + ", got " + Arrays.toString(constructors));
             }
             @SuppressWarnings("unchecked") R ret =
-                (R) constructors[0].newInstance();
+                    (R) constructors[0].newInstance();
             return ret;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new StaticComponentLoadingException("Failed to instantiate generated component factory", e);

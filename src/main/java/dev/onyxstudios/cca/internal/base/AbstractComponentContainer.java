@@ -22,15 +22,12 @@
  */
 package dev.onyxstudios.cca.internal.base;
 
-import dev.onyxstudios.cca.api.v3.component.Component;
-import dev.onyxstudios.cca.api.v3.component.ComponentContainer;
-import dev.onyxstudios.cca.api.v3.component.ComponentKey;
-import dev.onyxstudios.cca.api.v3.component.ComponentRegistry;
-import dev.onyxstudios.cca.api.v3.component.CopyableComponent;
-import net.fabricmc.fabric.api.util.NbtType;
+import dev.onyxstudios.cca.api.v3.component.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+
 import java.util.Iterator;
 
 /**
@@ -72,8 +69,8 @@ public abstract class AbstractComponentContainer implements ComponentContainer {
      */
     @Override
     public void fromTag(CompoundTag tag) {
-        if(tag.contains(NBT_KEY, NbtType.LIST)) {
-            ListTag componentList = tag.getList(NBT_KEY, NbtType.COMPOUND);
+        if(tag.contains(NBT_KEY, Tag.TAG_LIST)) {
+            ListTag componentList = tag.getList(NBT_KEY, Tag.TAG_COMPOUND);
             for (int i = 0; i < componentList.size(); i++) {
                 CompoundTag nbt = componentList.getCompound(i);
                 ComponentKey<?> type = ComponentRegistry.get(new ResourceLocation(nbt.getString("componentId")));
@@ -84,13 +81,13 @@ public abstract class AbstractComponentContainer implements ComponentContainer {
                     }
                 }
             }
-        } else if (tag.contains("cardinal_components", NbtType.COMPOUND)) {
+        } else if (tag.contains("cardinal_components", Tag.TAG_COMPOUND)) {
             CompoundTag componentMap = tag.getCompound(NBT_KEY);
 
             for (ComponentKey<?> key : this.keys()) {
                 String keyId = key.getId().toString();
 
-                if (componentMap.contains(keyId, NbtType.COMPOUND)) {
+                if (componentMap.contains(keyId, Tag.TAG_COMPOUND)) {
                     Component component = key.getInternal(this);
                     assert component != null;
                     component.readFromNbt(componentMap.getCompound(keyId));

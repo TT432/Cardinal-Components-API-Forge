@@ -22,8 +22,6 @@
  */
 package dev.onyxstudios.cca.api.v3.component.sync;
 
-import com.demonwav.mcdev.annotations.CheckEnv;
-import com.demonwav.mcdev.annotations.Env;
 import dev.onyxstudios.cca.api.v3.component.Component;
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import net.minecraft.nbt.CompoundTag;
@@ -94,7 +92,7 @@ public interface AutoSyncedComponent extends Component, ComponentPacketWriter, P
      * such that it uses a different data format must override this method.
      * @see #writeSyncPacket(FriendlyByteBuf, ServerPlayer)
      */
-    @CheckEnv(Env.CLIENT)
+    // TODO @CheckEnv(Env.CLIENT)
     default void applySyncPacket(FriendlyByteBuf buf) {
         CompoundTag tag = buf.readNbt();
         if (tag != null) {

@@ -28,8 +28,9 @@ import dev.onyxstudios.cca.api.v3.component.Component;
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import dev.onyxstudios.cca.internal.base.asm.CcaBootstrap;
-import javax.annotation.Nullable;
 import net.minecraft.resources.ResourceLocation;
+
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,7 +89,7 @@ public final class ComponentRegistryImpl implements ComponentRegistryV3 {
     }
 
     @VisibleForTesting
-    void clear(ResourceLocation id) {
+    public void clear(ResourceLocation id) {
         this.keys.remove(id);
     }
 }

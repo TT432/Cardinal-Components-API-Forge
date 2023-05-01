@@ -25,9 +25,10 @@ package dev.onyxstudios.cca.api.v3.component;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.sync.ComponentPacketWriter;
 import dev.onyxstudios.cca.api.v3.component.sync.PlayerSyncPredicate;
-import javax.annotation.Nullable;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.server.level.ServerPlayer;
+
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**

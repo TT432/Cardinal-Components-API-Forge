@@ -22,11 +22,10 @@
  */
 package dev.onyxstudios.cca.api.v3.component;
 
-import com.demonwav.mcdev.annotations.CheckEnv;
-import com.demonwav.mcdev.annotations.Env;
 import dev.onyxstudios.cca.api.v3.util.NbtSerializable;
 import dev.onyxstudios.cca.internal.base.GenericContainerBuilder;
 import dev.onyxstudios.cca.internal.base.asm.StaticComponentPluginBase;
+import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +33,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 import java.util.Set;
-import net.minecraft.nbt.CompoundTag;
 
 /**
  * An opaque container for components.
@@ -57,7 +55,7 @@ public interface ComponentContainer extends NbtSerializable {
 
     void tickServerComponents();
 
-    @CheckEnv(Env.CLIENT)
+    // TODO @CheckEnv(Env.CLIENT)
     void tickClientComponents();
 
     /**

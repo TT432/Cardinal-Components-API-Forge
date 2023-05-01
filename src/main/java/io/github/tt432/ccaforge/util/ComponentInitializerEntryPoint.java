@@ -1,4 +1,4 @@
-package dev.onyxstudios.cca.api.v3.util;
+package io.github.tt432.ccaforge.util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.meta.TypeQualifierDefault;

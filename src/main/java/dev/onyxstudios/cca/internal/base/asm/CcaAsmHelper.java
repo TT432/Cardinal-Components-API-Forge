@@ -31,15 +31,8 @@ import dev.onyxstudios.cca.api.v3.component.tick.ServerTickingComponent;
 import dev.onyxstudios.cca.internal.base.AbstractComponentContainer;
 import dev.onyxstudios.cca.internal.base.QualifiedComponentFactory;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.minecraft.resources.ResourceLocation;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
@@ -51,10 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public final class CcaAsmHelper {
 
@@ -69,8 +59,8 @@ public final class CcaAsmHelper {
     public static final String COMPONENT_CONTAINER = Type.getInternalName(ComponentContainer.class);
     public static final String COMPONENT_TYPE = Type.getInternalName(ComponentKey.class);
     public static final String DYNAMIC_COMPONENT_CONTAINER_IMPL = Type.getInternalName(AbstractComponentContainer.class);
-    public static final String IDENTIFIER = (FabricLauncherBase.getLauncher() == null ? ResourceLocation.class.getName() : FabricLoader.getInstance().getMappingResolver().mapClassName("intermediary", "net.minecraft.class_2960")).replace('.', '/');
-    public static final String EVENT = Type.getInternalName(Event.class);
+    public static final String IDENTIFIER = Type.getInternalName(ResourceLocation.class);
+    // TODO public static final String EVENT = Type.getInternalName(Event.class);
     // generated references
     public static final String STATIC_COMPONENT_CONTAINER = "dev/onyxstudios/cca/_generated_/GeneratedComponentContainer";
     public static final String STATIC_CONTAINER_GETTER_DESC = "()L" + COMPONENT + ";";
@@ -115,10 +105,10 @@ public final class CcaAsmHelper {
 
     public static String getJavaIdentifierName(ResourceLocation identifier) {
         return identifier.toString()
-            .replace(':', '$')
-            .replace('/', '$')
-            .replace('.', '\u00A4' /*¤*/)
-            .replace('-', '\u00A3' /*£*/);
+                .replace(':', '$')
+                .replace('/', '$')
+                .replace('.', '\u00A4' /*¤*/)
+                .replace('-', '\u00A3' /*£*/);
     }
 
     public static String getStaticStorageGetterName(ResourceLocation identifier) {
@@ -155,28 +145,6 @@ public final class CcaAsmHelper {
      * <strong>This method must not be called before the static component container interface has been defined!</strong>
      *
      * @param componentFactoryType the interface implemented by the component factories used to initialize this container
-     * @param componentFactories   a map of {@link ComponentKey}s to factories for components of that type
-     * @param componentImpls       a map of {@link ComponentKey}s to their actual implementation classes for the container
-     * @param implNameSuffix       a unique suffix for the generated class
-     * @return the generated container class
-     * @deprecated cannot remove in 1.17 because internal compatibility
-     */
-    @Deprecated(forRemoval = true)
-    public static <I> Class<? extends ComponentContainer> spinComponentContainer(Class<? super I> componentFactoryType, Map<ComponentKey<?>, I> componentFactories, Map<ComponentKey<?>, Class<? extends Component>> componentImpls, String implNameSuffix) throws IOException {
-        Map<ComponentKey<?>, QualifiedComponentFactory<I>> merged = new LinkedHashMap<>();
-        for (var entry : componentFactories.entrySet()) {
-            merged.put(entry.getKey(), new QualifiedComponentFactory<>(entry.getValue(), componentImpls.get(entry.getKey()), Set.of()));
-        }
-        return spinComponentContainer(componentFactoryType, merged, implNameSuffix);
-    }
-
-    /**
-     * Defines an implementation of {@link ComponentContainer} that supports direct component access.
-     *
-     * <p>Instances of the returned class can be returned by {@link ComponentProvider#getComponentContainer()}.
-     * <strong>This method must not be called before the static component container interface has been defined!</strong>
-     *
-     * @param componentFactoryType the interface implemented by the component factories used to initialize this container
      * @param componentFactories   a map of {@link ComponentKey} ids to factories for components of that type
      * @param implNameSuffix       a unique suffix for the generated class
      * @return the generated container class
@@ -201,12 +169,12 @@ public final class CcaAsmHelper {
         String ctorDesc = Type.getMethodDescriptor(Type.VOID_TYPE, actualCtorArgs);
         ClassNode classNode = new ClassNode(ASM_VERSION);
         classNode.visit(
-            Opcodes.V1_8,
-            Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
-            containerImplName,
-            null,
-            STATIC_COMPONENT_CONTAINER,
-            null
+                Opcodes.V1_8,
+                Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL,
+                containerImplName,
+                null,
+                STATIC_COMPONENT_CONTAINER,
+                null
         );
 
         String factoryFieldDescriptor = Type.getDescriptor(componentFactoryType);
@@ -242,18 +210,18 @@ public final class CcaAsmHelper {
             String factoryFieldName = getFactoryFieldName(identifier);
             /* field declaration */
             classNode.visitField(
-                Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC,
-                factoryFieldName,
-                factoryFieldDescriptor,
-                null,
-                null
+                    Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC,
+                    factoryFieldName,
+                    factoryFieldDescriptor,
+                    null,
+                    null
             ).visitEnd();
             classNode.visitField(
-                Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
-                componentFieldName,
-                componentFieldDescriptor,
-                null,
-                null
+                    Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
+                    componentFieldName,
+                    componentFieldDescriptor,
+                    null,
+                    null
             ).visitEnd();
             /* constructor initialization */
             init.visitFieldInsn(Opcodes.GETSTATIC, containerImplName, factoryFieldName, factoryFieldDescriptor);
@@ -281,11 +249,11 @@ public final class CcaAsmHelper {
 
             /* getter implementation */
             MethodVisitor getter = classNode.visitMethod(
-                Opcodes.ACC_PUBLIC,
-                getStaticStorageGetterName(identifier),
-                STATIC_CONTAINER_GETTER_DESC,
-                null,
-                null
+                    Opcodes.ACC_PUBLIC,
+                    getStaticStorageGetterName(identifier),
+                    STATIC_CONTAINER_GETTER_DESC,
+                    null,
+                    null
             );
             getter.visitVarInsn(Opcodes.ALOAD, 0);
             // stack: <this>

@@ -22,9 +22,10 @@
  */
 package dev.onyxstudios.cca.api.v3.component;
 
+import net.minecraft.resources.ResourceLocation;
+
 import java.util.Collection;
 import java.util.Collections;
-import net.minecraft.resources.ResourceLocation;
 
 /**
  * Entrypoint getting invoked to declare static component types.

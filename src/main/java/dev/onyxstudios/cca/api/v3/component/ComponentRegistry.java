@@ -23,11 +23,11 @@
 package dev.onyxstudios.cca.api.v3.component;
 
 import dev.onyxstudios.cca.internal.base.ComponentRegistryImpl;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nullable;
-import net.minecraft.resources.ResourceLocation;
 import java.util.stream.Stream;
 
 /**

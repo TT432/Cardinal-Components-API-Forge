@@ -27,13 +27,14 @@ import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
 import dev.onyxstudios.cca.api.v3.component.StaticComponentInitializer;
 import dev.onyxstudios.cca.internal.base.LazyDispatcher;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
-import net.fabricmc.loader.api.metadata.CustomValue;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import io.github.tt432.ccaforge.entrypointes.EntrypointContainer;
+import io.github.tt432.ccaforge.entrypointes.EntrypointHandler;
+import io.github.tt432.ccaforge.util.AnnoHelper;
+import io.github.tt432.ccaforge.util.ComponentInitializerEntryPoint;
 import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.forgespi.language.IConfigurable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -42,25 +43,18 @@ import org.objectweb.asm.tree.ClassNode;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public final class CcaBootstrap extends LazyDispatcher {
 
     public static final String COMPONENT_TYPE_INIT_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getObjectType(CcaAsmHelper.IDENTIFIER), Type.getType(Class.class));
     public static final String COMPONENT_TYPE_GET0_DESC = "(L" + CcaAsmHelper.COMPONENT_CONTAINER + ";)L" + CcaAsmHelper.COMPONENT + ";";
-    public static final String STATIC_INIT_ENTRYPOINT = "cardinal-components:static-init";
     public static final CcaBootstrap INSTANCE = new CcaBootstrap();
 
-    private final List<EntrypointContainer<StaticComponentInitializer>> staticComponentInitializers = FabricLoader.getInstance().getEntrypointContainers(STATIC_INIT_ENTRYPOINT, StaticComponentInitializer.class);
+    private final List<StaticComponentInitializer> staticComponentInitializers = new ArrayList<>();
 
-    @VisibleForTesting Collection<ResourceLocation> additionalComponentIds = new ArrayList<>();
+    @VisibleForTesting
+    Collection<ResourceLocation> additionalComponentIds = new ArrayList<>();
     private Map<ResourceLocation, Class<? extends ComponentKey<?>>> generatedComponentTypes = new HashMap<>();
 
     public CcaBootstrap() {
@@ -82,29 +76,37 @@ public final class CcaBootstrap extends LazyDispatcher {
     @Override
     protected void init() {
         try {
+            EntrypointHandler.loadAll();
+
             Set<ResourceLocation> staticComponentTypes = new TreeSet<>(Comparator.comparing(ResourceLocation::toString));
 
-            for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
-                ModMetadata metadata = mod.getMetadata();
-                if (metadata.containsCustomValue("cardinal-components")) {
-                    try {
-                        for (CustomValue value : metadata.getCustomValue("cardinal-components").getAsArray()) {
-                            staticComponentTypes.add(new ResourceLocation(value.getAsString()));
-                        }
-                    } catch (ClassCastException | ResourceLocationException e) {
-                        throw new StaticComponentLoadingException("Failed to load component ids declared by " + metadata.getName() + "(" + metadata.getId() + ")", e);
-                    }
-                }
-            }
+            staticComponentInitializers.addAll(EntrypointHandler.getEntrypointContainers("cardinal-components",
+                    StaticComponentInitializer.class).stream().map(EntrypointContainer::entrypoint).toList());
 
-            for (EntrypointContainer<StaticComponentInitializer> staticInitializer : this.staticComponentInitializers) {
-                try {
-                    staticComponentTypes.addAll(staticInitializer.getEntrypoint().getSupportedComponentKeys());
-                } catch (Throwable e) {
-                    ModMetadata badMod = staticInitializer.getProvider().getMetadata();
-                    throw new StaticComponentLoadingException(String.format("Exception while querying %s (%s) for supported static component types", badMod.getName(), badMod.getId()), e);
-                }
-            }
+            ModList.get().forEachModFile(mf -> {
+                IConfigurable config = mf.getModFileInfo().getConfig();
+                Object modName = config.getConfigElement("displayName").orElse("<unnamed>");
+                Object modId = config.getConfigElement("modId").orElse("<unnamed>");
+
+                config.<List<Object>>getConfigElement("cardinal-components").ifPresent(ls -> ls.stream()
+                        .map(Object::toString)
+                        .forEach(value -> {
+                            try {
+                                staticComponentTypes.add(new ResourceLocation(value));
+                            } catch (ClassCastException | ResourceLocationException e) {
+                                throw new StaticComponentLoadingException(
+                                        "Failed to load component ids declared by %s (%s)".formatted(modName, modId), e);
+                            }
+                        }));
+
+                staticComponentInitializers.addAll(AnnoHelper.getInstance(mf,
+                        ComponentInitializerEntryPoint.class, StaticComponentInitializer.class));
+            });
+
+            staticComponentTypes.addAll(staticComponentInitializers.stream()
+                    .map(StaticComponentInitializer::getSupportedComponentKeys)
+                    .flatMap(Collection::stream)
+                    .toList());
 
             staticComponentTypes.addAll(this.additionalComponentIds);
 
@@ -117,8 +119,8 @@ public final class CcaBootstrap extends LazyDispatcher {
 
     @Override
     protected void postInit() {
-        for (EntrypointContainer<StaticComponentInitializer> staticInitializer : this.staticComponentInitializers) {
-            staticInitializer.getEntrypoint().finalizeStaticBootstrap();
+        for (StaticComponentInitializer staticInitializer : this.staticComponentInitializers) {
+            staticInitializer.finalizeStaticBootstrap();
         }
     }
 

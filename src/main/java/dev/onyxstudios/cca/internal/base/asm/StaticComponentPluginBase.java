@@ -28,10 +28,8 @@ import dev.onyxstudios.cca.api.v3.component.ComponentFactory;
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.internal.base.ComponentRegistrationInitializer;
 import dev.onyxstudios.cca.internal.base.LazyDispatcher;
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import io.github.tt432.ccaforge.util.AnnoHelper;
+import io.github.tt432.ccaforge.util.ComponentRegistrationInitializerEntryPoint;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -40,7 +38,6 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,7 +56,7 @@ public abstract class StaticComponentPluginBase<T, I> extends LazyDispatcher {
      * Defines an implementation of {@code I} which creates component containers of
      * the given implementation type, using an argument of the given {@code factoryArg} type.
      *
-     * <p>The generated class has a single constructor, taking {@code eventCount} parameters of type {@link Event}.
+     * <p>The generated class has a single constructor, taking {@code eventCount} parameters of type {@link ?}.
      *
      * @param implNameSuffix       a unique suffix for the generated class
      * @param containerFactoryType the factory interface that is to be implemented by the returned class
@@ -149,30 +146,31 @@ public abstract class StaticComponentPluginBase<T, I> extends LazyDispatcher {
         processInitializers(this.getEntrypoints(), this::dispatchRegistration);
     }
 
-    public static <I> void processInitializers(Collection<EntrypointContainer<I>> entrypoints, Consumer<I> action) {
-        for (EntrypointContainer<I> entrypoint : entrypoints) {
+    public static <I> void processInitializers(Collection<I> entrypoints, Consumer<I> action) {
+        for (var entrypoint : entrypoints) {
             try {
-                action.accept(entrypoint.getEntrypoint());
+                action.accept(entrypoint);
             } catch (Throwable e) {
-                ModMetadata metadata = entrypoint.getProvider().getMetadata();
-                throw new StaticComponentLoadingException(String.format("Exception while registering static component factories for %s (%s)", metadata.getName(), metadata.getId()), e);
+                throw new StaticComponentLoadingException("Exception while registering static component factories for ??", e);
             }
         }
     }
 
-    public static <I extends ComponentRegistrationInitializer> Collection<EntrypointContainer<I>> getComponentEntrypoints(String key, Class<I> type) {
-        Collection<EntrypointContainer<ComponentRegistrationInitializer>> generic = FabricLoader.getInstance().getEntrypointContainers("cardinal-components", ComponentRegistrationInitializer.class);
-        Collection<EntrypointContainer<I>> specific = new ArrayList<>(FabricLoader.getInstance().getEntrypointContainers(key, type));
-        for (EntrypointContainer<ComponentRegistrationInitializer> container : generic) {
-            if (type.isInstance(container.getEntrypoint())) {
-                @SuppressWarnings("unchecked") EntrypointContainer<I> c = (EntrypointContainer<I>) container;
-                specific.add(c);
+    public static <I extends ComponentRegistrationInitializer> Collection<I> getComponentEntrypoints(String key, Class<?> anno, Class<I> type) {
+        Collection<ComponentRegistrationInitializer> generic =
+                AnnoHelper.getAllInstance(ComponentRegistrationInitializerEntryPoint.class, ComponentRegistrationInitializer.class);
+        Collection<I> specific = AnnoHelper.getAllInstance(anno, type);
+
+        for (var container : generic) {
+            if (type.isInstance(container)) {
+                specific.add((I) container);
             }
         }
+
         return specific;
     }
 
-    protected abstract Collection<EntrypointContainer<I>> getEntrypoints();
+    protected abstract Collection<I> getEntrypoints();
 
     protected abstract void dispatchRegistration(I entrypoint);
 
