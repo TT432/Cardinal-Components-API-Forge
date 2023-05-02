@@ -26,7 +26,7 @@ import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.sync.ComponentPacketWriter;
 import dev.onyxstudios.cca.api.v3.component.sync.PlayerSyncPredicate;
 import dev.onyxstudios.cca.internal.base.asm.CcaBootstrap;
-import net.minecraft.network.protocol.Packet;
+import io.github.tt432.ccaforge.net.CcaNetHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.ApiStatus;
@@ -193,10 +193,10 @@ public abstract class ComponentKey<C extends Component> {
     @ApiStatus.Experimental
     public void syncWith(ServerPlayer player, ComponentProvider provider, ComponentPacketWriter writer, PlayerSyncPredicate predicate) {
         if (predicate.shouldSyncWith(player)) {
-            Packet<?> packet = provider.toComponentPacket(this, writer, player);
+            var packet = provider.toComponentPacket(this, writer, player);
 
             if (packet != null) {
-                player.connection.send(packet);
+                CcaNetHandler.sendToClient(player, packet);
             }
         }
     }

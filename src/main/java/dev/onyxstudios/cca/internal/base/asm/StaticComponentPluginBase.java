@@ -28,8 +28,11 @@ import dev.onyxstudios.cca.api.v3.component.ComponentFactory;
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.internal.base.ComponentRegistrationInitializer;
 import dev.onyxstudios.cca.internal.base.LazyDispatcher;
+import io.github.tt432.ccaforge.entrypointes.EntrypointContainer;
+import io.github.tt432.ccaforge.entrypointes.EntrypointHandler;
 import io.github.tt432.ccaforge.util.AnnoHelper;
 import io.github.tt432.ccaforge.util.ComponentRegistrationInitializerEntryPoint;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -156,7 +159,11 @@ public abstract class StaticComponentPluginBase<T, I> extends LazyDispatcher {
         }
     }
 
-    public static <I extends ComponentRegistrationInitializer> Collection<I> getComponentEntrypoints(String key, Class<?> anno, Class<I> type) {
+    public static <I extends ComponentRegistrationInitializer> Collection<I> getComponentEntrypoints(String key, Class<I> type) {
+        return EntrypointHandler.getEntrypointContainers(key, type).stream().map(EntrypointContainer::entrypoint).toList();
+    }
+
+    public static <I extends ComponentRegistrationInitializer> Collection<I> getComponentEntrypoints(@Nullable Class<?> anno, Class<I> type) {
         Collection<ComponentRegistrationInitializer> generic =
                 AnnoHelper.getAllInstance(ComponentRegistrationInitializerEntryPoint.class, ComponentRegistrationInitializer.class);
         Collection<I> specific = AnnoHelper.getAllInstance(anno, type);

@@ -5,8 +5,13 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "ccaforge.refmap.json",
   "mixins": [
+    "entity.common.MixinEntity",
+    "entity.common.MixinPlayerManager",
+    "entity.common.MixinServerPlayerEntity",
+    "entity.common.MixinServerWorld"
   ],
   "client": [
+    "entity.client.MixinClientWorld"
   ],
   "injectors": {
     "defaultRequire": 1

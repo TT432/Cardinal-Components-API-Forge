@@ -85,10 +85,12 @@ public final class CcaBootstrap extends LazyDispatcher {
 
             ModList.get().forEachModFile(mf -> {
                 IConfigurable config = mf.getModFileInfo().getConfig();
-                Object modName = config.getConfigElement("displayName").orElse("<unnamed>");
-                Object modId = config.getConfigElement("modId").orElse("<unnamed>");
+                List<? extends IConfigurable> mods = config.getConfigList("mods");
+                IConfigurable modEntry = mods.get(0);
+                Object modName = modEntry.getConfigElement("displayName").orElse("<unnamed>");
+                Object modId = modEntry.getConfigElement("modId").orElse("<unnamed>");
 
-                config.<List<Object>>getConfigElement("cardinal-components").ifPresent(ls -> ls.stream()
+                config.<List<Object>>getConfigElement("custom",  "cardinal-components").ifPresent(ls -> ls.stream()
                         .map(Object::toString)
                         .forEach(value -> {
                             try {

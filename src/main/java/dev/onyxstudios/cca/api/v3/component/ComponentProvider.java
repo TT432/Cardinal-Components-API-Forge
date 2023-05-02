@@ -25,7 +25,6 @@ package dev.onyxstudios.cca.api.v3.component;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
 import dev.onyxstudios.cca.api.v3.component.sync.ComponentPacketWriter;
 import dev.onyxstudios.cca.api.v3.component.sync.PlayerSyncPredicate;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
@@ -60,14 +59,14 @@ public interface ComponentProvider extends ComponentAccess {
     /**
      * Produces a sync packet using the given information.
      *
-     * @param key the key describing the component being synchronized
-     * @param writer a {@link ComponentPacketWriter} writing the component's data to the packet
+     * @param key       the key describing the component being synchronized
+     * @param writer    a {@link ComponentPacketWriter} writing the component's data to the packet
      * @param recipient the player receiving the packet
      * @return a {@link net.minecraft.network.protocol.Packet} that has all the information required to perform the component sync
      * @since 3.0.0
      */
     @Nullable
-    default <C extends AutoSyncedComponent> ClientboundCustomPayloadPacket toComponentPacket(ComponentKey<? super C> key, ComponentPacketWriter writer, ServerPlayer recipient) {
+    default <C extends AutoSyncedComponent> Object toComponentPacket(ComponentKey<? super C> key, ComponentPacketWriter writer, ServerPlayer recipient) {
         return null;
     }
 }

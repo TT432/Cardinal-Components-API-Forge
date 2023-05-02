@@ -46,12 +46,11 @@ description='''
 '''
 
 [custom]
-cardinal-components = ["ada:adass"]
+cardinal-components=[]
 
 [entrypoints]
-cardinal-components=[
-   "dev.onyxstudios.cca.test.entity.CcaEntityTestMod"
-]
+cardinal-components=[]
+cardinal-components-entity=[]
 
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.ccaforge]] #optional
