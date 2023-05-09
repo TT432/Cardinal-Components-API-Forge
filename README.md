@@ -1,4 +1,4 @@
-* CCA-Forge
+# Cardinal-Components-API-Forge
 
 forge port for [CCA](https://github.com/OnyxStudios/Cardinal-Components-API)
 
@@ -8,6 +8,30 @@ The first one is to use the annotations under `io.github.tt432.ccaforge.util` pa
 
 The second is to define the relationship between the class and the corresponding key in mods.toml, which can be
 implemented in the `io.github.tt432.ccaforge.entrypointes` package
+
+---
+
+The mod has been uploaded to modrinth and you can simply use [modrinth maven](https://docs.modrinth.com/docs/tutorials/maven/)
+to depend on this project, here is a simple example to use directly:
+```gradle
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+dependencies {
+    implementation("maven.modrinth:ccaforge:{mc_version}-{mod_version}")
+}
+```
 
 ---
 

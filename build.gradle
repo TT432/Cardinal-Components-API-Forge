@@ -152,6 +152,10 @@ dependencies {
     testImplementation("junit:junit:4.13.1")
 }
 
+java {
+    withSourcesJar()
+}
+
 // Example for how to get properties into the manifest for reading at runtime.
 jar {
     manifest {
